@@ -87,7 +87,117 @@ If Jase (hypotheitcally) gets an offer from another company to sell Big Plastic 
 
 💡 At any point, a disabled account can be enabled again by right-clicking it and selecting "Enable Account".
 
+## Network File Shares and Permissions
 
+In this section, we'll learn how to set up network file sharing so that users can collaborate on projects with shared files. This mimics what google drive would do, except for the fact that network file sharing is centrally managed and we don't technically even need internet access to have it working. As long as the local network is still up, file sharing will still function. 
+
+To see how network file sharing might work, log into your domain controller as Jane if you don't have that open. Navigate to your `C:\` drive and create four folders:
+
+- **read-access** (All employees will be able to read this but not edit it. Useful for things like meeting notes or company literature.)
+- **write-access** (All employees will be able to read and write in this folder. Useful for shared projects with multiple users collaborating.)
+- **admin-access** (Only admins can read and write in this folder. Good for sensitive/technical information.)
+- **engineering** (Only engineers can read and write in this folder. Good for sensitive/technical data specific to the engineering wing.)
+
+![12  four new folders](https://github.com/user-attachments/assets/fcad3d3c-3c0e-4dc1-af0b-fca6c8986c1a)
+
+Now, we'll need to set the permission levels for the specific groups that we want to have access to this. In order to change permissions:
+
+1. Right click a folder and select "Properties".
+2. Go to the "Sharing" tab in folder properties.
+3. Click the "Share..." button to bring up the "Network Access Menu".
+4. Type the group you want to add and use the dropdown menu to select a level of permissions.
+
+![13  how to enable sharing and permissions](https://github.com/user-attachments/assets/b3fd0f61-263c-4bdd-8001-e10f1e83ed6e)
+
+For the first three folders:
+
+1. For `read-access` - Add **Domain Users** as a group and give them **Read** access.
+2. For `write-access` - Add **Domain Users** as a group and give them **Read/Write** access.
+3. For `admin-access` - Add **Domain Admins** as a group and give them **Read/Write** access.
+
+We will make an engineering wing and give engineers as an object specific permissions later. 
+
+For now, create a notepad file in each of the three folders with some text on it, then log into your client as different users and see what you can do. For example, if we log into our client as non-admin employee Ken, and click "Network" on the sidebar in File Explorer, we _might_ get an error.
+<!-- Fairly sure this was caused by the windows setup popup that says "do you want this computer to be discoverable by other pcs on the network??" and I usually select no. -->
+
+![14  error bad](https://github.com/user-attachments/assets/2a22f046-6980-48c4-9c7e-4497a8e87341)
+
+## Fixing the Network
+
+Ken calls Jane over to his computer and shows Jane the error. Fortunately, with Active Directory services, this is an easy fix. She closes the error and click the header the says "Click to change..." and selects "Turn on network discovery and file sharing"
+
+![15  jane clicks](https://github.com/user-attachments/assets/38fe9d1d-963c-46bb-bb33-79321888fb1d)
+
+She then puts her administrator credentials into the popup.
+
+![16  jane fixes problems](https://github.com/user-attachments/assets/120fb176-0f1a-4c11-8087-cf09e74806db)
+
+And since this is a work network, she clicks the network that turns on file sharing for only private networks.
+
+![17  jane clicks v2](https://github.com/user-attachments/assets/2061b542-15d0-4f17-bdc9-c4926c3e355c)
+
+And that's all there is to it! Setting up Active Directory can be a hassle, but in moments like this when changing settings just requires a set of credentials, its usefulness shines through.
+
+## Accessing the Domain Controller's Files
+
+Now that he has file sharing enabled, Ken can see the folders we created. In order to do so, click the address bar and type `\\domain-controller-name`, where "domain-controller-name" is the name of the virtual machine we promoted to a domain controller in Azure. For me, it would be `\\dc-1`. Now we can see the files and read them!
+
+💡 In the sidebar, right-click the "dc-1" folder and select "Pin to Quick Access" so you don't have to type the name every time!
+
+![18  kens view fixed](https://github.com/user-attachments/assets/0cd70f97-00ea-474c-905a-e8ad128af4c6)
+
+As you can see, Ken can see all of our shared folders, but if he tries to open admin access, he gets this error.  
+
+![18 5 kens new adventure](https://github.com/user-attachments/assets/675f74ea-ee59-4bf1-b790-10e7fbd6751d)
+
+If he tries to mess with the company rules in the "read-access" folder, he gets this error:
+
+![19  kens new rules](https://github.com/user-attachments/assets/a6a96c19-16be-4229-b5f7-25f9282f195c)
+
+In the "write-access" folder, though, he has a lot more freedom. Saving the document doesn't trigger an error (notice the lack of an asterisk in the file name). 💡 In Windows, when a file has been modified but not saved, the file name will have an asterisk appended to the front of it.
+
+![20  kens notes](https://github.com/user-attachments/assets/2ad48e85-6ae3-4bde-ac4e-fa6f66fecf41)
+
+## Creating the Engineering Wing
+
+Now it's time to work with the last folder, "engineering". In order to create a group of engineers, log into your domain controller as Jane if you don't have that open. Open "Active Directory Users and Computers", and within the "_EMPLOYEES" Organizational Unit, create a group called "Engineers".
+
+![21  new engineers](https://github.com/user-attachments/assets/e6cfc791-be9c-4a1e-9b56-77d650e0dc47)
+
+Go back to your "engineering" folder and then give the object "Engineers" read/write permission on the folder.
+
+![22  fast permissions version](https://github.com/user-attachments/assets/02639742-ce84-4bca-9451-a06ef5c6fe27)
+
+Open "Active Directory Users and Computers" once again and double click your "Engineers" security group. Go to the "Members" tab and click "Add", then choose one or two users to add to the security group.
+
+![23  adding users](https://github.com/user-attachments/assets/bd50c0c7-961e-447d-8ef4-63277e8b3c21)
+
+Once this is done, you can log out of your domain controller for good.
+
+## Viewing the Engineering Files
+
+Choose both a non-engineer employee and an engineer employee to log in as. Remote desktop into your client virtual machine and see which one can view and edit the engineering folder. Only users who belong to the security group "Engineers" should be able to see and access it! (By default, the owner of a file or folder has read/write permissions on it, so don't choose Jane!)
+
+Ken's network folder and access:
+
+![24  kens view](https://github.com/user-attachments/assets/512bbe47-7ae5-438c-96fd-e43c259e3f03)
+
+Engineer Lad's folder and access: 
+
+![25  lad's view](https://github.com/user-attachments/assets/7691590e-e696-4f60-a055-1bb1dd64542e)
+
+## Final Remarks
+
+This concludes the Active Directory Domain Services Demonstration. We worked through and showed:
+
+- Account Lockouts
+- Group Policy Management
+- Password Resets
+- Enabling/Disabling Accounts
+- Network File Sharing
+- Security Groups
+
+There is so much more you can do with Active Directory and so many more layers of detail even to the things that we touched upon, but this concludes the scope of my demonstration. Perhaps this could be a jumping-off point for research of your own. Thank you for reading!
 
 
 
