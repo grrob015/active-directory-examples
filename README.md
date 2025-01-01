@@ -1,6 +1,10 @@
 # active-directory-examples
 Showing the functionality of active directory with file sharing, user creation and organization, and more.
 
+## Video Demonstration
+
+[![Watch the video](https://img.youtube.com/vi/_ISZOsAF8JU/hqdefault.jpg)](https://youtu.be/_ISZOsAF8JU)
+
 <h2>Environments and Technologies Used</h2>
 
 - Microsoft Azure (Virtual Machines/Compute)
